@@ -6,25 +6,27 @@ import csv
 import datetime
 import json
 import os
+import sys
 import time
 
+from custom_logger import internal_logger, user_logger
 from dateutil import parser
 from hubspot import HubSpot
 from singer_sdk.helpers._typing import (
     DatetimeErrorTreatmentEnum,
     get_datelike_property_type,
-    handle_invalid_timestamp_in_record
+    handle_invalid_timestamp_in_record,
 )
 from singer_sdk.sinks import BatchSink
 
 from target_hubspot.exception import PartialImportException
-
 
 IMPORT_OPERATIONS_LOOKUP = {
     "CREATE": {"0-1": "CREATE"},
     "UPDATE": {"0-2": "UPDATE"},
     "UPSERT": {"0-3": "UPSERT"},
 }
+
 
 class HubSpotSink(BatchSink):
     """HubSpot target sink class."""
@@ -47,10 +49,12 @@ class HubSpotSink(BatchSink):
         stream_len = len(self.schema["properties"].keys())
         col_mapping_len = len(self.config["column_mapping"])
         if stream_len != col_mapping_len:
-            raise Exception(f"The count of properties in the input stream does not match the count of column mappings. Please check your config. Stream: {stream_len} Column Mapping: {col_mapping_len}")
+            raise Exception(
+                f"The count of properties in the input stream does not match the count of column mappings. Please check your config. Stream: {stream_len} Column Mapping: {col_mapping_len}"
+            )
 
     def _get_sorted_column_mappings(self):
-        return sorted(self.config["column_mapping"], key=lambda d: d['columnName']) 
+        return sorted(self.config["column_mapping"], key=lambda d: d["columnName"])
 
     def _get_sorted_headers(self):
         return sorted(self.schema["properties"])
@@ -64,19 +68,15 @@ class HubSpotSink(BatchSink):
             "importOperations": IMPORT_OPERATIONS_LOOKUP.get(self.config["import_operations"]),
             "dateFormat": self.config["date_format"],
             "files": [
-            {
-                "fileName": csv_filename,
-                "fileFormat": "CSV",
-                "fileImportPage": {
-                    "hasHeader": True,
-                    "columnMappings": self._get_sorted_column_mappings()
-
+                {
+                    "fileName": csv_filename,
+                    "fileFormat": "CSV",
+                    "fileImportPage": {"hasHeader": True, "columnMappings": self._get_sorted_column_mappings()},
                 }
-            }
-            ]
+            ],
         }
         filtered_kwargs = {"files": csv_filename}
-        filtered_kwargs['import_request'] = json.dumps(import_request)
+        filtered_kwargs["import_request"] = json.dumps(import_request)
         return filtered_kwargs
 
     def _start_import(self, request_kwargs):
@@ -89,15 +89,18 @@ class HubSpotSink(BatchSink):
 
     def _validate_completion_metadata(self, import_id, counters):
         if counters.get("ERRORS"):
-            raise PartialImportException(f"Import {import_id} Had Errors Importing. See your import history https://knowledge.hubspot.com/crm-setup/view-and-analyze-previous-imports for more information on troubleshooting errors: {counters}")
-        self.logger.info(f"Import {import_id} Completed: {counters}")
+            user_logger.error(
+                f"Import {import_id} Had Errors Importing. See your import history https://knowledge.hubspot.com/crm-setup/view-and-analyze-previous-imports for more information on troubleshooting errors: {counters}"
+            )
+            raise PartialImportException()
+        user_logger.info(f"Import {import_id} Completed: {counters}")
 
     def _import_csv_and_poll_for_status(self, request_kwargs):
         import_id, state = self._start_import(request_kwargs)
         while state not in {"DONE", "FAILED", "CANCELED"}:
             time.sleep(2)
             state, metadata = self._get_import_status(import_id)
-            self.logger.debug(f"Import {import_id} Status: {state}")
+            internal_logger.info(f"Import {import_id} Status: {state}")
         return import_id, metadata.counters
 
     def process_batch(self, context: dict) -> None:
@@ -117,7 +120,8 @@ class HubSpotSink(BatchSink):
             import_id, completion_metadata = self._import_csv_and_poll_for_status(request_kwargs)
             self._validate_completion_metadata(import_id, completion_metadata)
         except Exception as ex:
-            self.logger.error(f"Exception raised while submitting job to HubSpot: {ex}")
+            user_logger.error(f"Exception raised while submitting job to HubSpot: {ex}")
+            internal_logger.exception(ex)
             raise ex
         finally:
             os.remove(csv_filename)

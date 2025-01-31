@@ -1,0 +1,8 @@
+{
+  "name": "target-hubspot",
+  "variant": "nekt",
+  "pip_url": "-e ./load/target-hubspot",
+  "executable": "target-hubspot",
+  "namespace": "target_hubspot",
+  "capabilities": ["about", "stream-maps", "record-flattening"]
+}
