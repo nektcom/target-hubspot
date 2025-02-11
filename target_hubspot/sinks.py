@@ -19,8 +19,6 @@ from singer_sdk.helpers._typing import (
 )
 from singer_sdk.sinks import BatchSink
 
-from target_hubspot.exception import PartialImportException
-
 IMPORT_OPERATIONS_LOOKUP = {
     "CREATE": {"0-1": "CREATE"},
     "UPDATE": {"0-2": "UPDATE"},
@@ -89,10 +87,9 @@ class HubSpotSink(BatchSink):
 
     def _validate_completion_metadata(self, import_id, counters):
         if counters.get("ERRORS"):
-            user_logger.error(
+            user_logger.warning(
                 f"Import {import_id} Had Errors Importing. See your import history https://knowledge.hubspot.com/crm-setup/view-and-analyze-previous-imports for more information on troubleshooting errors: {counters}"
             )
-            raise PartialImportException()
         user_logger.info(f"Import {import_id} Completed: {counters}")
 
     def _import_csv_and_poll_for_status(self, request_kwargs):
