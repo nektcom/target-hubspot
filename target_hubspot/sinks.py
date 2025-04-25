@@ -9,6 +9,7 @@ import os
 import sys
 import time
 
+import requests
 from custom_logger import internal_logger, user_logger
 from dateutil import parser
 from hubspot import HubSpot
@@ -39,12 +40,22 @@ class HubSpotSink(BatchSink):
 
     def _get_access_token(self):
         if "refresh_token" in self.config.get("oauth_credentials", {}):
-            authenticator: HubSpotOAuthAuthenticator = HubSpotOAuthAuthenticator(
-                self,
-                auth_endpoint="https://api.hubapi.com/oauth/v1/token",
-            )
-            authenticator.update_access_token()
-            return authenticator.access_token
+            url = "https://api.hubapi.com/oauth/v1/token"
+            headers = {"Content-Type": "application/x-www-form-urlencoded"}
+            data = {
+                "grant_type": "refresh_token",
+                "client_id": self.config["oauth_credentials"]["client_id"],
+                "client_secret": self.config["oauth_credentials"]["client_secret"],
+                "refresh_token": self.config["oauth_credentials"]["refresh_token"],
+            }
+            try:
+                response = requests.post(url, headers=headers, data=data)
+                response.raise_for_status()
+                user_logger.info("Authentication successful.")
+                return response.json()["access_token"]
+            except requests.HTTPError as ex:
+                user_logger.error(f"Failed to refresh token: {ex}")
+                sys.exit(1)
         else:
             return self.config["access_token"]
 
