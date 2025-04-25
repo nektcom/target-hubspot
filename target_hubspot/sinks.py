@@ -19,6 +19,8 @@ from singer_sdk.helpers._typing import (
 )
 from singer_sdk.sinks import BatchSink
 
+from .auth import HubSpotOAuthAuthenticator
+
 IMPORT_OPERATIONS_LOOKUP = {
     "CREATE": {"0-1": "CREATE"},
     "UPDATE": {"0-2": "UPDATE"},
@@ -33,7 +35,15 @@ class HubSpotSink(BatchSink):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_client = HubSpot(access_token=self.config["access_token"])
+        self.api_client = HubSpot(access_token=self._get_access_token())
+
+    def _get_access_token(self):
+        if "refresh_token" in self.config.get("oauth_credentials", {}):
+            authenticator: HubSpotOAuthAuthenticator = HubSpotOAuthAuthenticator(self.config["oauth_credentials"])
+            authenticator.update_access_token()
+            return authenticator.access_token
+        else:
+            return self.config["access_token"]
 
     def _write_csv(self, csv_filename, records):
         with open(csv_filename, "w") as f:
@@ -162,4 +172,5 @@ class HubSpotSink(BatchSink):
                         treatment,
                         self.logger,
                     )
+                record[key] = date_val
                 record[key] = date_val

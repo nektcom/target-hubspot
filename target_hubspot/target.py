@@ -21,8 +21,18 @@ class TargetHubSpot(Target):
             "access_token",
             th.StringType,
             secret=True,
-            required=True,
+            required=False,
             description="Your HubSpot private app API access token. See the [docs](https://developers.hubspot.com/docs/api/private-apps) for more details.",
+        ),
+        th.Property(
+            "oauth_credentials",
+            th.ObjectType(
+                th.Property("client_id", th.StringType),
+                th.Property("client_secret", th.StringType),
+                th.Property("refresh_token", th.StringType),
+            ),
+            required=False,
+            description="The OAuth credentials needed to authenticate against the API service.",
         ),
         th.Property(
             "column_mapping",
