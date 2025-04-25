@@ -39,7 +39,10 @@ class HubSpotSink(BatchSink):
 
     def _get_access_token(self):
         if "refresh_token" in self.config.get("oauth_credentials", {}):
-            authenticator: HubSpotOAuthAuthenticator = HubSpotOAuthAuthenticator(self.config["oauth_credentials"])
+            authenticator: HubSpotOAuthAuthenticator = HubSpotOAuthAuthenticator(
+                self,
+                auth_endpoint="https://api.hubapi.com/oauth/v1/token",
+            )
             authenticator.update_access_token()
             return authenticator.access_token
         else:
