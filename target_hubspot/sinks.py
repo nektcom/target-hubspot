@@ -20,8 +20,6 @@ from singer_sdk.helpers._typing import (
 )
 from singer_sdk.sinks import BatchSink
 
-from .auth import HubSpotOAuthAuthenticator
-
 IMPORT_OPERATIONS_LOOKUP = {
     "CREATE": {"0-1": "CREATE"},
     "UPDATE": {"0-2": "UPDATE"},
