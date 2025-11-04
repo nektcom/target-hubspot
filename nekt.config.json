@@ -1,0 +1,261 @@
+{
+  "meltano": {
+    "name": "target-hubspot",
+    "variant": "nekt",
+    "pip_url": "-e ./load/target-hubspot",
+    "executable": "target-hubspot",
+    "namespace": "target_hubspot",
+    "capabilities": ["about", "stream-maps", "record-flattening"]
+  },
+  "connectors": [
+    {
+      "connector_slug": "hubspot",
+      "config_template": {
+        "type": "object",
+        "required": ["oauth_credentials", "column_mapping"],
+        "properties": {
+          "date_format": {
+            "enum": ["MONTH_DAY_YEAR", "YEAR_MONTH_DAY", "DAY_MONTH_YEAR"],
+            "type": "string",
+            "title": "Date format",
+            "format": "dropdown",
+            "default": "YEAR_MONTH_DAY",
+            "el_type": "loader",
+            "description": "The format for dates included in the input table.",
+            "allowed_values": [
+              {
+                "label": "DD-MM-YYYY",
+                "value": "DAY_MONTH_YEAR"
+              },
+              {
+                "label": "MM-DD-YYYY",
+                "value": "MONTH_DAY_YEAR"
+              },
+              {
+                "label": "YYYY-MM-DD",
+                "value": "YEAR_MONTH_DAY"
+              }
+            ]
+          },
+          "access_token": {
+            "type": "string",
+            "order": 5,
+            "title": "Access token",
+            "hidden": true,
+            "secret": true,
+            "el_type": "loader",
+            "docs_url": "https://developers.hubspot.com/docs/api/private-apps",
+            "description": "Your HubSpot private app API access token."
+          },
+          "column_mapping": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["columnName", "propertyName", "columnObjectTypeId"],
+              "properties": {
+                "columnName": {
+                  "type": "string",
+                  "order": 1,
+                  "title": "Input table column name",
+                  "format": "source",
+                  "description": "The name of the input table column."
+                },
+                "columnType": {
+                  "type": "string",
+                  "order": 4,
+                  "title": "Field type (optional)",
+                  "format": "dropdown",
+                  "docs_url": "https://developers.hubspot.com/docs/api/crm/understanding-the-crm",
+                  "description": "Specify whether the column contains a unique identifier property. This impacts on how the data will be imported/merged on the destination.",
+                  "allowed_values": [
+                    {
+                      "label": "Object ID",
+                      "value": "HUBSPOT_OBJECT_ID"
+                    },
+                    {
+                      "label": "Alternate ID",
+                      "value": "HUBSPOT_ALTERNATE_ID"
+                    }
+                  ]
+                },
+                "propertyName": {
+                  "type": "string",
+                  "order": 2,
+                  "title": "Hubspot property internal name",
+                  "format": "destination",
+                  "docs_url": "https://knowledge.hubspot.com/properties/create-and-edit-properties",
+                  "description": "The internal name of the HubSpot property that the data will map to. You can find it on the property details page under Settings -> Data Management -> Properties."
+                },
+                "columnObjectTypeId": {
+                  "type": "string",
+                  "order": 3,
+                  "title": "Entity",
+                  "format": "dropdown-with-other",
+                  "default": "0-1",
+                  "docs_url": "https://developers.hubspot.com/docs/api/crm/understanding-the-crm#object-type-id",
+                  "description": "The name of the target object on the destination. Custom objects usually follow this pattern `2-XXX`.",
+                  "allowed_values": [
+                    {
+                      "label": "Contacts",
+                      "value": "0-1"
+                    },
+                    {
+                      "label": "Companies",
+                      "value": "0-2"
+                    },
+                    {
+                      "label": "Deals",
+                      "value": "0-3"
+                    },
+                    {
+                      "label": "Tickets",
+                      "value": "0-5"
+                    },
+                    {
+                      "label": "Products",
+                      "value": "0-7"
+                    },
+                    {
+                      "label": "Line items",
+                      "value": "0-8"
+                    },
+                    {
+                      "label": "Quotes",
+                      "value": "0-14"
+                    },
+                    {
+                      "label": "Communications",
+                      "value": "0-18"
+                    },
+                    {
+                      "label": "Feedback submissions",
+                      "value": "0-19"
+                    },
+                    {
+                      "label": "Tasks",
+                      "value": "0-27"
+                    },
+                    {
+                      "label": "Calls",
+                      "value": "0-48"
+                    },
+                    {
+                      "label": "Emails",
+                      "value": "0-49"
+                    },
+                    {
+                      "label": "Marketing events",
+                      "value": "0-54"
+                    },
+                    {
+                      "label": "Subscriptions",
+                      "value": "0-69"
+                    },
+                    {
+                      "label": "Notes",
+                      "value": "0-46"
+                    },
+                    {
+                      "label": "Meetings",
+                      "value": "0-47"
+                    },
+                    {
+                      "label": "Invoices",
+                      "value": "0-53"
+                    },
+                    {
+                      "label": "Services",
+                      "value": "0-162"
+                    },
+                    {
+                      "label": "Leads",
+                      "value": "0-136"
+                    },
+                    {
+                      "label": "Payments",
+                      "value": "0-101"
+                    },
+                    {
+                      "label": "Postal mail",
+                      "value": "0-116"
+                    },
+                    {
+                      "label": "Listings",
+                      "value": "0-420"
+                    },
+                    {
+                      "label": "Appointments",
+                      "value": "0-421"
+                    },
+                    {
+                      "label": "Courses",
+                      "value": "0-410"
+                    },
+                    {
+                      "label": "Users",
+                      "value": "0-115"
+                    }
+                  ]
+                }
+              }
+            },
+            "title": "Column Mapping",
+            "format": "mapping",
+            "el_type": "loader",
+            "description": "An array including an object entry for each column in your import file stream."
+          },
+          "import_operations": {
+            "enum": ["CREATE", "UPDATE", "UPSERT"],
+            "type": "string",
+            "title": "Import mode",
+            "format": "dropdown",
+            "default": "UPSERT",
+            "el_type": "loader",
+            "description": "Used to indicate whether the import should create and update, only create, or only update records for a certain object or activity.",
+            "allowed_values": [
+              {
+                "label": "Create",
+                "value": "CREATE"
+              },
+              {
+                "label": "Update",
+                "value": "UPDATE"
+              },
+              {
+                "label": "Upsert",
+                "value": "UPSERT"
+              }
+            ]
+          },
+          "oauth_credentials": {
+            "type": "object",
+            "order": 1,
+            "title": "Access credentials",
+            "format": "hubspot-oauth",
+            "el_type": "loader",
+            "properties": {
+              "client_id": {
+                "type": "string",
+                "title": "OAuth client ID",
+                "description": "The client ID from the OAuth application used to authenticate the user."
+              },
+              "client_secret": {
+                "type": "string",
+                "title": "OAuth client secret",
+                "secret": true,
+                "description": "The client secret from the OAuth application used to authenticate the user."
+              },
+              "refresh_token": {
+                "type": "string",
+                "title": "Refresh token",
+                "secret": true,
+                "description": "The refresh token obtained through Hubspot's OAuth flow from a Super Admin account with access to send data via Imports API."
+              }
+            },
+            "description": "Please use a Hubspot account with Super Admin access. Using an account with insufficient permissions will result in an error."
+          }
+        }
+      }
+    }
+  ]
+}

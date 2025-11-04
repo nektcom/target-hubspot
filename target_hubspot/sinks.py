@@ -10,15 +10,15 @@ import sys
 import time
 
 import requests
-from custom_logger import internal_logger, user_logger
 from dateutil import parser
 from hubspot import HubSpot
-from singer_sdk.helpers._typing import (
+from nekt_singer_sdk.custom_logger import internal_logger, user_logger
+from nekt_singer_sdk.helpers._typing import (
     DatetimeErrorTreatmentEnum,
     get_datelike_property_type,
     handle_invalid_timestamp_in_record,
 )
-from singer_sdk.sinks import BatchSink
+from nekt_singer_sdk.sinks import BatchSink
 
 IMPORT_OPERATIONS_LOOKUP = {
     "CREATE": {"0-1": "CREATE"},

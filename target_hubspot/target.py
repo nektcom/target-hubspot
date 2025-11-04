@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import custom_logger
-from singer_sdk import typing as th
-from singer_sdk.target_base import Target
-
-_ = custom_logger
+from nekt_singer_sdk import typing as th
+from nekt_singer_sdk.target_base import Target
 
 from target_hubspot.sinks import HubSpotSink
 
