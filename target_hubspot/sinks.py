@@ -185,4 +185,3 @@ class HubSpotSink(BatchSink):
                         self.logger,
                     )
                 record[key] = date_val
-                record[key] = date_val

@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import typing as t
 
-from singer_sdk.helpers._compat import importlib_resources
-from singer_sdk.testing import get_target_test_class
-from singer_sdk.testing.suites import TestSuite
-from singer_sdk.testing.templates import TargetFileTestTemplate
+from nekt_singer_sdk.helpers._compat import importlib_resources
+from nekt_singer_sdk.testing import get_target_test_class
+from nekt_singer_sdk.testing.suites import TestSuite
+from nekt_singer_sdk.testing.templates import TargetFileTestTemplate
 
 import tests.streams as test_streams
 from target_hubspot.target import TargetHubSpot
 
 if t.TYPE_CHECKING:
-    from singer_sdk.helpers._compat import Traversable
+    from nekt_singer_sdk.helpers._compat import Traversable
 
 SAMPLE_CONFIG: dict[str, t.Any] = {
     "access_token": "",
