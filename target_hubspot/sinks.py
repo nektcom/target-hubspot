@@ -34,9 +34,12 @@ class HubSpotSink(BatchSink):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_client = HubSpot(access_token=self._get_access_token())
+        self.access_token = None
+        self.token_expires_at = None
+        self._refresh_access_token()
+        self.api_client = HubSpot(access_token=self.access_token)
 
-    def _get_access_token(self):
+    def _refresh_access_token(self):
         if "refresh_token" in self.config.get("oauth_credentials", {}):
             url = "https://api.hubapi.com/oauth/v1/token"
             headers = {"Content-Type": "application/x-www-form-urlencoded"}
@@ -49,13 +52,23 @@ class HubSpotSink(BatchSink):
             try:
                 response = requests.post(url, headers=headers, data=data)
                 response.raise_for_status()
+                token_data = response.json()
+                self.access_token = token_data["access_token"]
+                expires_in = token_data.get("expires_in", 1800)
+                self.token_expires_at = time.time() + expires_in
                 user_logger.info("Authentication successful.")
-                return response.json()["access_token"]
             except requests.HTTPError as ex:
                 user_logger.error(f"Failed to refresh token: {ex}")
                 sys.exit(1)
         else:
-            return self.config["access_token"]
+            self.access_token = self.config["access_token"]
+            self.token_expires_at = None
+
+    def _ensure_valid_token(self):
+        if self.token_expires_at and time.time() >= (self.token_expires_at - 300):
+            user_logger.info("Token expiring soon, refreshing...")
+            self._refresh_access_token()
+            self.api_client = HubSpot(access_token=self.access_token)
 
     def _write_csv(self, csv_filename, records):
         with open(csv_filename, "w") as f:
@@ -100,10 +113,12 @@ class HubSpotSink(BatchSink):
         return filtered_kwargs
 
     def _start_import(self, request_kwargs):
+        self._ensure_valid_token()
         response = self.api_client.crm.imports.core_api.create(**request_kwargs)
         return response.id, response.state
 
     def _get_import_status(self, import_id):
+        self._ensure_valid_token()
         response = self.api_client.crm.imports.core_api.get_by_id(import_id)
         return response.state, response.metadata
 
