@@ -1,28 +1,43 @@
-[tool.poetry]
-name = "target-hubspot"
+[project]
+name = "nekt-target-hubspot"
 version = "0.0.1"
 description = "`target-hubspot` is a Singer target for HubSpot, built with the Meltano Singer SDK."
 readme = "README.md"
-authors = ["Pat Nadolny"]
+authors = [{ name = "Pat Nadolny" }]
+license = "Apache-2.0"
 keywords = [
     "ELT",
     "HubSpot",
 ]
-license = "Apache-2.0"
+requires-python = "<3.12,>=3.11"
+dependencies = [
+    "fs-s3fs>=1.1.1",
+    "hubspot-api-client>=8.0.0",
+    "nekt-singer-sdk @ git+https://github.com/nektcom/singer-sdk.git@v0.23.0",
+    "requests>=2.31.0",
+    "setuptools>=80.9.0",
+]
 
-[tool.poetry.dependencies]
-python = "<3.12,>=3.11"
-fs-s3fs = { version = "^1.1.1", optional = true }
-requests = "^2.31.0"
-hubspot-api-client = "^8.0.0"
-nekt-singer-sdk = {git = "https://github.com/nektcom/singer-sdk.git"}
-setuptools = "^80.9.0"
+[project.optional-dependencies]
+s3 = [
+    "fs-s3fs",
+]
 
-[tool.poetry.dev-dependencies]
-pytest = "^7.2.1"
+[project.scripts]
+target-hubspot = 'target_hubspot.target:TargetHubSpot.cli'
 
-[tool.poetry.extras]
-s3 = ["fs-s3fs"]
+[dependency-groups]
+dev = [
+    "pytest>=7.2.1",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "target_hubspot",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.ruff]
 ignore = [
@@ -42,10 +57,7 @@ known-first-party = ["target_hubspot"]
 [tool.ruff.pydocstyle]
 convention = "google"
 
-[build-system]
-requires = ["poetry-core>=1.0.8"]
-build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.scripts]
-# CLI declaration
-target-hubspot = 'target_hubspot.target:TargetHubSpot.cli'
+[build-system]
+requires = ["hatchling>=1,<2"]
+build-backend = "hatchling.build"
