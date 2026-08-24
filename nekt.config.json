@@ -7,6 +7,8 @@
     "namespace": "target_hubspot",
     "capabilities": ["about", "stream-maps", "record-flattening"]
   },
+  "base_image_type": "base",
+  "python": "3.11",
   "connectors": [
     {
       "connector_slug": "hubspot",
